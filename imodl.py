@@ -2,8 +2,13 @@ import serial
 import serial.tools.list_ports_windows as port_list
 import time
 
+com_port = 'COM3'
+com_baudrate = 115200
+com_timeout = 2
+input_filename = 'test\huayi.ldf'
+
 if __name__ == '__main__':
-    ser = serial.Serial('COM3', baudrate=115200, timeout=2)
+    ser = serial.Serial(com_port, baudrate=com_baudrate, timeout=com_timeout)
     # ports = list(port_list.comports())
     # for p in ports:
     #     print(p)
