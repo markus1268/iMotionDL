@@ -1,3 +1,13 @@
+# coding=utf-8
+''' iMotion Downloader
+
+    Author: Markus Setya Budi Soetikno
+    Company: PT Hartono Istana Teknologi (Polytron)
+    Dept.: Research and Development
+    Module: Main Application / console app
+    Version: 0.1
+    Date:   06/04/2020
+'''
 import serial
 import time
 import sys
@@ -21,13 +31,14 @@ if __name__ == '__main__':
     
     if uploading_state == 0:
         # in application mode
-        # waiting for 'ff' or 'ad' ?
+        # waiting for 'ff' or 'ad' after device power up
+        '''
         print('Waiting for device power up response (in application mode)...')
         ans = ser.read()
         if (ans != b'\xff') and (ans != b'\xad'):
             print('Not in application Mode...')
             sys.exit(1)
-        
+        ''' 
         # check communication
         ser.timeout = 3
         print('In application mode, communication checking...')
@@ -43,11 +54,14 @@ if __name__ == '__main__':
         print('Switching to sbsl mode...')
         msg = b'\x7e\x02\x80\x31\x51\x81\x10\xfa\xf8\x7e\x87'
         ser.write(msg)
-        time.sleep(.100)
+        #time.sleep(.100)
         ans = ser.read()
         if (ans != b'\xfe'):
             print('Cannot enter sbsl mode...')
             print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
+            if ans == b'\x7e':
+                ans = ser.read(ser.in_waiting)
+                print('in_waiting: {}'.format(ans.hex(' ')))
             sys.exit(1)
         uploading_state = 1
         time.sleep(1)
