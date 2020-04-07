@@ -52,7 +52,7 @@ if __name__ == '__main__':
     else:
         # error
         print('Unknown mode, fail...')
-        print('ans: {}'.format(ans.hex(' ')))
+        print('ans: {}'.format(ans.hex()))
         sys.exit(1)
 
     if (uploading_state == 0):
@@ -78,7 +78,7 @@ if __name__ == '__main__':
             count = count + 1
         else:
             print('Communication fail...')
-            print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
+            print('msg: {} --> {}'.format(msg.hex(), ans.hex()))
             sys.exit(1)
 
         # change to bootloader mode (SBSL)
@@ -92,11 +92,11 @@ if __name__ == '__main__':
                 break
             if (ans == b'\x7e'):
                 ans = ser.read(ser.in_waiting)
-                print('in_waiting: {}'.format(ans.hex(' ')))
+                print('in_waiting: {}'.format(ans.hex()))
             count = count + 1
         else:
             print('Cannot enter sbsl mode...')
-            print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
+            print('msg: {} --> {}'.format(msg.hex(), ans.hex()))
             sys.exit(1)
         uploading_state = 1
         time.sleep(1)
@@ -138,7 +138,7 @@ if __name__ == '__main__':
             ans = ser.read()
             if (ans != b'\x5d'):
                 print('SBSL auto baudrate fail...')
-                print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
+                print('msg: {} --> {}'.format(msg.hex(), ans.hex()))
                 sys.exit(1)
 
         # read SBSL status (Flash erase)
@@ -150,7 +150,7 @@ if __name__ == '__main__':
         fdtc = ans[21]
         sbsl_id = ans[24:40]
         print('FDTC : {}'.format(fdtc))
-        print('SBSL id : {}'.format(sbsl_id.hex(' ')))
+        print('SBSL id : {}'.format(sbsl_id.hex()))
 
         # firmware uploading to device
         print('Firmware uploading...')
@@ -162,13 +162,13 @@ if __name__ == '__main__':
                 ans = ser.read(3)
                 if ans[-2:] != b'\x90\x00':
                     print('Error firmware uploading...')
-                    print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
+                    print('msg: {} --> {}'.format(msg.hex(), ans.hex()))
                     sys.exit(1)
             elif msg[1] == 0x21:
                 ans = ser.read(3) ###
                 if ans[-2:] != b'\x90\x00':
                     print('Error firmware uploading...')
-                    print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
+                    print('msg: {} --> {}'.format(msg.hex(), ans.hex()))
                     sys.exit(1)
             else:
                 pass
@@ -192,7 +192,7 @@ if __name__ == '__main__':
             ans = ser.read()
             if (ans != b'\xcd'):
                 print('Config mode auto baudrate fail...')
-                print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
+                print('msg: {} --> {}'.format(msg.hex(), ans.hex()))
                 sys.exit(1)
 
         # parameter uploading to device
@@ -209,7 +209,7 @@ if __name__ == '__main__':
                 pass
             if ans[-2:] != b'\x90\x00':
                 print('Error parameter uploading...')
-                print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
+                print('msg: {} --> {}'.format(msg.hex(), ans.hex()))
                 sys.exit(1)
             time.sleep(.100)
 
@@ -227,7 +227,7 @@ if __name__ == '__main__':
                 pass
             if ans[-2:] != b'\x90\x00':
                 print('Error script uploading...')
-                print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
+                print('msg: {} --> {}'.format(msg.hex(), ans.hex()))
                 sys.exit(1)
             time.sleep(.100)
 
@@ -238,7 +238,7 @@ if __name__ == '__main__':
         ans = ser.read(3)
         if ans != b'\x90\x00\xff':
             print('Fail to switch to Application mode...')
-            print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
+            print('msg: {} --> {}'.format(msg.hex(), ans.hex()))
             sys.exit(1)
         print('Finish uploading...')
         print('Success')
