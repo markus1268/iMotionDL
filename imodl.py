@@ -28,8 +28,34 @@ if __name__ == '__main__':
     
     # configure serial communication
     ser = serial.Serial(com_port, baudrate=com_baudrate)
-    
-    if uploading_state == 0:
+    ser.flush()
+
+    # do auto detect mode, assume in fab out mode (sbsl mode) for production
+    # check/connect and do autobaudrate
+    ser.timeout = 2
+    print('Auto detecting mode...')
+    msg = b'\x00\x6c'
+    ser.write(msg)
+    ans = ser.read()
+    if (ans == b'\x5d'):
+        # sbsl mode
+        uploading_state = 1
+        en_autobaudrate = 0
+    elif (ans == b'\xcd'):
+        # config mode
+        uploading_state = 2
+        en_autobaudrate = 0
+    elif (ans == b''):
+        # application mode (timeout)
+        uploading_state = 0
+        en_autobaudrate = 1
+    else:
+        # error
+        print('Unknown mode, fail...')
+        print('ans: {}'.format(ans.hex(' ')))
+        sys.exit(1)
+
+    if (uploading_state == 0):
         # in application mode
         # waiting for 'ff' or 'ad' after device power up
         '''
@@ -40,28 +66,37 @@ if __name__ == '__main__':
             sys.exit(1)
         ''' 
         # check communication
-        ser.timeout = 3
         print('In application mode, communication checking...')
-        msg = b'\x7e\x13\x7e\x13'
-        ser.write(msg)
-        ans = ser.read(4)
-        if (ans != b'\x7e\x17\x7e\x17') and (ans != b'\x7e\x1b\x7e\x1b'):
+        ser.timeout = 1
+        count = 0
+        while (count < 4):
+            msg = b'\x7e\x13\x7e\x13'
+            ser.write(msg)
+            ans = ser.read(4)
+            if (ans == b'\x7e\x17\x7e\x17') or (ans == b'\x7e\x1b\x7e\x1b'):
+                break
+            count = count + 1
+        else:
             print('Communication fail...')
             print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
             sys.exit(1)
 
         # change to bootloader mode (SBSL)
         print('Switching to sbsl mode...')
-        msg = b'\x7e\x02\x80\x31\x51\x81\x10\xfa\xf8\x7e\x87'
-        ser.write(msg)
-        #time.sleep(.100)
-        ans = ser.read()
-        if (ans != b'\xfe'):
-            print('Cannot enter sbsl mode...')
-            print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
-            if ans == b'\x7e':
+        count = 0
+        while (count < 4):
+            msg = b'\x7e\x02\x80\x31\x51\x81\x10\xfa\xf8\x7e\x87'
+            ser.write(msg)
+            ans = ser.read()
+            if (ans == b'\xfe'):
+                break
+            if (ans == b'\x7e'):
                 ans = ser.read(ser.in_waiting)
                 print('in_waiting: {}'.format(ans.hex(' ')))
+            count = count + 1
+        else:
+            print('Cannot enter sbsl mode...')
+            print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
             sys.exit(1)
         uploading_state = 1
         time.sleep(1)
@@ -96,14 +131,15 @@ if __name__ == '__main__':
     if uploading_state == 1:
         # connect and do autobaudrate
         ser.timeout = 3
-        print('In sbsl mode, auto baudrate configuration...')
-        msg = b'\x00\x6c'
-        ser.write(msg)
-        ans = ser.read()
-        if (ans != b'\x5d'):
-            print('SBSL auto baudrate fail...')
-            print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
-            sys.exit(1)
+        if en_autobaudrate == 1:
+            print('In sbsl mode, auto baudrate configuration...')
+            msg = b'\x00\x6c'
+            ser.write(msg)
+            ans = ser.read()
+            if (ans != b'\x5d'):
+                print('SBSL auto baudrate fail...')
+                print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
+                sys.exit(1)
 
         # read SBSL status (Flash erase)
         print('Get sbsl status & id, flash erasing...')
@@ -142,20 +178,22 @@ if __name__ == '__main__':
             msg_count += 1
             time.sleep(.100)
         uploading_state = 2
+        en_autobaudrate = 1
         print('')
         # entering config mode
         time.sleep(.500)
 
     if uploading_state == 2:
         # run autobaudrate
-        print('In config mode, auto baudrate configuration...')
-        msg = b'\x00\x6c'
-        ser.write(msg)
-        ans = ser.read()
-        if (ans != b'\xcd'):
-            print('Config mode auto baudrate fail...')
-            print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
-            sys.exit(1)
+        if en_autobaudrate == 1:
+            print('In config mode, auto baudrate configuration...')
+            msg = b'\x00\x6c'
+            ser.write(msg)
+            ans = ser.read()
+            if (ans != b'\xcd'):
+                print('Config mode auto baudrate fail...')
+                print('msg: {} --> {}'.format(msg.hex(' '), ans.hex(' ')))
+                sys.exit(1)
 
         # parameter uploading to device
         print('Parameter uploading...')
