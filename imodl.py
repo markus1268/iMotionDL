@@ -92,7 +92,8 @@ if __name__ == '__main__':
                 break
             if (ans == b'\x7e'):
                 ans = ser.read(ser.in_waiting)
-                print('in_waiting: {}'.format(ans.hex()))
+                print('in_waiting: 7e {}'.format(ans.hex()))
+                break
             count = count + 1
         else:
             print('Cannot enter sbsl mode...')
